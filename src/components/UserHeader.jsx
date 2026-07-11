@@ -15,6 +15,7 @@ export default function UserHeader({ isMobile, onMenuToggle }) {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     window.location.href = '/login';
   };
 

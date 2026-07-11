@@ -2,7 +2,8 @@ import type { APIRoute } from 'astro';
 import sql from '../../utils/db';
 import crypto from 'crypto';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
+  const { request, cookies } = context;
   try {
     const { email, password, fullName, office } = await request.json();
 
@@ -29,6 +30,12 @@ export const POST: APIRoute = async ({ request }) => {
 
     const userId = result[0].id;
     const user = { id: userId, email, fullName, office };
+
+    cookies.set('session', `user:${userId}`, {
+      path: '/',
+      secure: import.meta.env.PROD,
+      maxAge: 60 * 60 * 24 * 7 // 1 week
+    });
 
     return new Response(JSON.stringify({ message: 'User registered successfully', user }), { status: 201 });
   } catch (error) {

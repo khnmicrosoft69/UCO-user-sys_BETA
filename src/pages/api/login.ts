@@ -2,7 +2,8 @@ import type { APIRoute } from 'astro';
 import sql from '../../utils/db';
 import crypto from 'crypto';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
+  const { request, cookies } = context;
   try {
     const { email, password } = await request.json();
 
@@ -23,6 +24,11 @@ export const POST: APIRoute = async ({ request }) => {
     const user = rows[0];
 
     if (user) {
+      cookies.set('session', `user:${user.id}`, {
+        path: '/',
+        secure: import.meta.env.PROD,
+        maxAge: 60 * 60 * 24 * 7 // 1 week
+      });
       return new Response(JSON.stringify({ message: 'Login successful', user }), { status: 200 });
     } else {
       return new Response(JSON.stringify({ message: 'Invalid email or password' }), { status: 401 });

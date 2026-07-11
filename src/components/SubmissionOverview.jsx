@@ -187,9 +187,60 @@ export default function SubmissionOverview() {
                   <p className="text-[9px] font-black text-[#A3AED0] tracking-widest uppercase">
                     {item.label}
                   </p>
-                  <p className="text-[11px] font-bold text-[#1B2559] uppercase mt-0.5">
-                    {item.value || "Not Specified"}
-                  </p>
+                  <div className="text-[11px] font-bold text-[#1B2559] uppercase mt-0.5">
+                    {(() => {
+                      if (!item.value) return "Not Specified";
+                      
+                      const shouldFormat = ["Social Media", "Event Type", "Service"].includes(item.label);
+                      if (!shouldFormat) {
+                        return item.value;
+                      }
+
+                      const knownOptions = [
+                        'official adzu website',
+                        'official adzu social media accounts',
+                        'print media',
+                        'photo/video documentation',
+                        'local media and other services',
+                        'file photos',
+                        'facebook live',
+                        'mascot',
+                        'posting by official adzu social media accounts (text, photos, and videos)',
+                        'layout/design and posting of graphics (social cards and infographics)',
+                        'other'
+                      ];
+
+                      const valStr = String(item.value);
+                      const lowerStr = valStr.toLowerCase();
+                      const matched = [];
+                      
+                      knownOptions.forEach(opt => {
+                        let idx = lowerStr.indexOf(opt);
+                        while (idx !== -1) {
+                          // Prevent overlapping matches
+                          if (!matched.some(m => idx >= m.index && idx < m.index + m.length)) {
+                            matched.push({
+                              index: idx,
+                              length: opt.length,
+                              value: valStr.substring(idx, idx + opt.length)
+                            });
+                          }
+                          idx = lowerStr.indexOf(opt, idx + 1);
+                        }
+                      });
+
+                      let displayLines = [];
+                      if (matched.length > 0) {
+                        displayLines = matched.sort((a, b) => a.index - b.index).map(m => m.value);
+                      } else {
+                        displayLines = valStr.split(',').map(v => v.trim()).filter(Boolean);
+                      }
+
+                      return displayLines.map((line, idx) => (
+                        <span key={idx} className="block">{idx + 1}. {line}</span>
+                      ));
+                    })()}
+                  </div>
                 </div>
               ))}
             </div>
