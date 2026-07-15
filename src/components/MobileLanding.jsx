@@ -107,7 +107,9 @@ export default function MobileLanding({ onCreateRequest }) {
                           ? "📱"
                           : log.request_type.includes("Photo")
                             ? "📸"
-                            : "📄"}
+                            : log.request_type.includes("Local Media")
+                              ? "📰"
+                              : "📄"}
                       </div>
                       <div className="flex flex-col">
                         <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">

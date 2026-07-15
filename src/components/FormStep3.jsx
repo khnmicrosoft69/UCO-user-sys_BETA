@@ -1,6 +1,5 @@
 import React from 'react';
 
-const socialAccounts = ['Facebook', 'Twitter', 'Instagram', 'YouTube', 'TikTok'];
 const serviceOptions = [
   'Layout and Posting of graphics (Social cards and infographics)',
   'Design and Posting of graphics (Social cards and infographics)',
@@ -8,6 +7,17 @@ const serviceOptions = [
 ];
 
 export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
+  const requestTypes = Array.isArray(formData.requestType) 
+    ? formData.requestType 
+    : (formData.requestType ? [formData.requestType] : []);
+  const isLocalMediaSelected = requestTypes.includes('Local Media Services');
+
+  const platformOptions = isLocalMediaSelected ? [
+    'Radio/Television/Teleserye',
+    'Press Release (Newspaper, Magazines, etc.)',
+    'Press Conference',
+    'Local Media Event Coverage'
+  ] : ['Facebook', 'Twitter', 'Instagram', 'YouTube', 'TikTok'];
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -108,9 +118,11 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
         </div>
 
         <div>
-          <label className="block text-xs font-black text-slate-700 mb-3 uppercase tracking-[0.15em]">Social Media Platform*</label>
+          <label className="block text-xs font-black text-slate-700 mb-3 uppercase tracking-[0.15em]">
+            {isLocalMediaSelected ? 'Platforms*' : 'Social Media Platform*'}
+          </label>
           <div className="flex flex-wrap gap-2">
-            {socialAccounts.map(account => (
+            {platformOptions.map(account => (
               <button
                 key={account}
                 onClick={() => toggleArrayValue('socialAccount', account)}

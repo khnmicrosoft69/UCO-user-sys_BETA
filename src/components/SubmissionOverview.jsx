@@ -204,6 +204,8 @@ export default function SubmissionOverview() {
                         'video documentation',
                         'photo/video documentation',
                         'local media and other services',
+                        'local media services',
+                        'other services',
                         'file photos',
                         'facebook live',
                         'mascot',

@@ -6,7 +6,8 @@ const requestTypes = [
   { label: 'Print Media', desc: 'Design & Layout, Printing, etc', icon: '📄' },
   { label: 'Photo Documentation', desc: 'Event Highlights', icon: '📸' },
   { label: 'Video Documentation', desc: 'Event Highlights', icon: '📹' },
-  { label: 'Local Media and Other Services', desc: 'Press releases & partnerships', icon: '📰' },
+  { label: 'Local Media Services', desc: 'Press releases & partnerships', icon: '📰' },
+  { label: 'Other Services', desc: 'Other specialized media services', icon: '✨' },
   { label: 'File Photos', desc: 'Archive retrieval', icon: '📁' },
   { label: 'Facebook Live', desc: 'Live event streaming', icon: '🎥' },
   { label: 'Mascot', desc: 'Mascot appearance and engagement', icon: '🦅' }
@@ -21,7 +22,22 @@ export default function FormStep2({ formData, setFormData, onNext, onPrev }) {
     } else {
       newTypes = [...currentTypes, val];
     }
-    setFormData({ ...formData, requestType: newTypes });
+
+    // Check if the local media services selection status is changing
+    const wasLocalMedia = currentTypes.includes('Local Media Services');
+    const isLocalMedia = newTypes.includes('Local Media Services');
+
+    const updatedDetails = { ...formData.requestDetails };
+    if (wasLocalMedia !== isLocalMedia) {
+      // Clear selected platforms
+      updatedDetails.socialAccount = [];
+    }
+
+    setFormData({ 
+      ...formData, 
+      requestType: newTypes,
+      requestDetails: updatedDetails
+    });
   };
 
   const isSelected = (label) => {

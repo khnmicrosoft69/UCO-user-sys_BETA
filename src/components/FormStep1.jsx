@@ -18,11 +18,11 @@ export default function FormStep1({ formData, setFormData, onNext }) {
         <p className="text-xs font-black text-slate-500 uppercase tracking-[0.15em] mb-4">Read carefully before starting:</p>
         <ul className="text-sm text-slate-600 space-y-3 list-none">
           {[
-            'Submit at least three (3) working days before the event.',
-            'Ensure all materials (Press Release, Photos) are attached.',
-            'Incomplete or late submissions may not be accommodated.',
-            'All content must align with AdZU’s values and brand identity.',
-            'UCO reserves the right to decline non-compliant requests.'
+            'Submit Photo and Video Documentation requests at least three (3) working days before the event.',
+            'Ensure all attachments e.g., (Press Release Template, photos in HD format, videos, etc) are uploaded when making publicity requests.',
+            'Check all contents to ensure compliance with the ADZU branding guidelines.' ,
+            'Non-compliant or late requests may not be accommodated.'
+            
           ].map((text, i) => (
             <li key={i} className="flex items-start gap-3">
               <span className="text-[#0A1C5C] font-bold">•</span>
@@ -33,7 +33,7 @@ export default function FormStep1({ formData, setFormData, onNext }) {
         <div className="mt-6 p-4 bg-amber-50/80 border border-amber-100 rounded-2xl">
           <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Important Note:</p>
           <p className="text-xs text-amber-700 leading-relaxed font-medium">
-            Submitting this form does not guarantee approval. All submissions are subject to UCO review and scheduling.
+            Submitting this form does not guarantee approval. All submissions are subject to UCO review and scheduling. Please call UCO to confirm job requests.
           </p>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function FormStep1({ formData, setFormData, onNext }) {
             </div>
           </div>
           <label className="text-xs text-slate-500 leading-relaxed font-semibold cursor-pointer select-none">
-            I have read and understood the guidelines. I acknowledge that all submissions are subject to UCO review and I am responsible for confirming the status.
+            I have read and understood the guidelines. I acknowledge that all submissions are subject to UCO review and I am responsible for confirming the status of the request.
           </label>
         </div>
       </div>
