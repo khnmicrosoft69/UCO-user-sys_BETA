@@ -200,12 +200,16 @@ export default function SubmissionOverview() {
                         'official adzu website',
                         'official adzu social media accounts',
                         'print media',
+                        'photo documentation',
+                        'video documentation',
                         'photo/video documentation',
                         'local media and other services',
                         'file photos',
                         'facebook live',
                         'mascot',
                         'posting by official adzu social media accounts (text, photos, and videos)',
+                        'layout and posting of graphics (social cards and infographics)',
+                        'design and posting of graphics (social cards and infographics)',
                         'layout/design and posting of graphics (social cards and infographics)',
                         'other'
                       ];

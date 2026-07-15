@@ -2,8 +2,8 @@ import React from 'react';
 
 const socialAccounts = ['Facebook', 'Twitter', 'Instagram', 'YouTube', 'TikTok'];
 const serviceOptions = [
-  'Posting by Official AdZU Social Media Accounts (Text, photos, and videos)',
-  'Layout/Design and Posting of graphics (Social cards and infographics)',
+  'Layout and Posting of graphics (Social cards and infographics)',
+  'Design and Posting of graphics (Social cards and infographics)',
   'Other'
 ];
 
