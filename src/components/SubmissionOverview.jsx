@@ -36,30 +36,37 @@ export default function SubmissionOverview() {
   const loadFiles = (sub) => {
     const fileList = [];
     
-    const parseUrl = (path, defaultName) => {
-      if (!path) return null;
-      if (path.startsWith('http')) {
-        return { name: defaultName, url: path };
-      }
-      // Legacy local paths
-      const parts = path.split(/[\\/]/);
-      const folderIndex = parts.findIndex(p => p.includes('_20'));
-      let folder, filename;
-      if (folderIndex !== -1) {
-         folder = parts[folderIndex]; filename = parts[folderIndex + 1];
-      } else {
-         folder = parts[parts.length - 2]; filename = parts[parts.length - 1];
-      }
-      return { 
-        name: filename || defaultName, 
-        url: `${viewerBase}/${filename?.endsWith('.docx') ? 'view/docx' : 'file'}/${folder}/${filename}` 
-      };
+    const parseUrl = (pathStr, defaultName) => {
+      if (!pathStr) return [];
+      const paths = pathStr.includes(',') ? pathStr.split(',') : [pathStr];
+      return paths.map((path, index) => {
+        if (path.startsWith('http')) {
+          const name = paths.length > 1 ? `${defaultName} ${index + 1}` : defaultName;
+          return { name, url: path };
+        }
+        // Legacy local paths
+        const parts = path.split(/[\\/]/);
+        const folderIndex = parts.findIndex(p => p.includes('_20'));
+        let folder, filename;
+        if (folderIndex !== -1) {
+           folder = parts[folderIndex]; filename = parts[folderIndex + 1];
+        } else {
+           folder = parts[parts.length - 2]; filename = parts[parts.length - 1];
+        }
+        const name = paths.length > 1 
+          ? `${filename || defaultName} ${index + 1}` 
+          : (filename || defaultName);
+        return { 
+          name, 
+          url: `${viewerBase}/${filename?.endsWith('.docx') ? 'view/docx' : 'file'}/${folder}/${filename}` 
+        };
+      });
     };
 
-    if (sub.ppTemplate) fileList.push(parseUrl(sub.ppTemplate, 'Template Document'));
-    if (sub.image) fileList.push(parseUrl(sub.image, 'Image'));
-    if (sub.video) fileList.push(parseUrl(sub.video, 'Video'));
-    if (sub.audio) fileList.push(parseUrl(sub.audio, 'Audio'));
+    if (sub.ppTemplate) fileList.push(...parseUrl(sub.ppTemplate, 'Template Document'));
+    if (sub.image) fileList.push(...parseUrl(sub.image, 'Image'));
+    if (sub.video) fileList.push(...parseUrl(sub.video, 'Video'));
+    if (sub.audio) fileList.push(...parseUrl(sub.audio, 'Audio'));
 
     const validFiles = fileList.filter(Boolean);
     setFiles(validFiles);

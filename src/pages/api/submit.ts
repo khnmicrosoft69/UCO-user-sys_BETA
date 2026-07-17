@@ -62,21 +62,26 @@ export const POST: APIRoute = async ({ request }) => {
     // Path outside user-dashboard - No longer needed, we'll pass folderName to Google Drive
     // const uploadDir = path.join(process.cwd(), '..', 'uploads', folderName);
 
-    let ppTemplate = null;
-    let image = null;
-    let video = null;
-    let audio = null;
+    const ppTemplateUrls: string[] = [];
+    const imageUrls: string[] = [];
+    const videoUrls: string[] = [];
+    const audioUrls: string[] = [];
 
     const files = formData.getAll('files') as File[];
 
     for (const file of files) {
       if (file.size === 0) continue; // Skip empty file entries
       const savedPath = await saveFile(file, folderName);
-      if (file.name.endsWith('.docx') || file.name.endsWith('.pdf')) ppTemplate = savedPath;
-      else if (file.type.startsWith('image/')) image = savedPath;
-      else if (file.type.startsWith('video/')) video = savedPath;
-      else if (file.type.startsWith('audio/')) audio = savedPath;
+      if (file.name.endsWith('.docx') || file.name.endsWith('.pdf')) ppTemplateUrls.push(savedPath);
+      else if (file.type.startsWith('image/')) imageUrls.push(savedPath);
+      else if (file.type.startsWith('video/')) videoUrls.push(savedPath);
+      else if (file.type.startsWith('audio/')) audioUrls.push(savedPath);
     }
+
+    const ppTemplate = ppTemplateUrls.length > 0 ? ppTemplateUrls.join(',') : null;
+    const image = imageUrls.length > 0 ? imageUrls.join(',') : null;
+    const video = videoUrls.length > 0 ? videoUrls.join(',') : null;
+    const audio = audioUrls.length > 0 ? audioUrls.join(',') : null;
 
     // Insert into Postgres
     await sql`

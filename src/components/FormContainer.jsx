@@ -77,19 +77,97 @@ export default function FormContainer() {
     const data = new FormData();
     data.append('user_id', user.id);
     data.append('email', formData.email);
-    data.append('requestType', formData.requestType);
+    
+    const requestTypes = Array.isArray(formData.requestType) 
+      ? formData.requestType 
+      : (formData.requestType ? [formData.requestType] : []);
+    data.append('requestType', requestTypes.join(', '));
+    
     data.append('office_name', formData.requestDetails.office_name);
     data.append('requestedByName', formData.requestDetails.requestedByName);
     data.append('requestedByMobile', formData.requestDetails.requestedByMobile);
-    data.append('alternateContactName', formData.requestDetails.alternateContactName);
-    data.append('alternateContactMobile', formData.requestDetails.alternateContactMobile);
-    data.append('socialAccount', formData.requestDetails.socialAccount);
-    data.append('serviceType', formData.requestDetails.serviceType);
-    data.append('eventDetails', formData.eventInfo.eventDetails);
+    data.append('alternateContactName', formData.requestDetails.alternateContactName || '');
+    data.append('alternateContactMobile', formData.requestDetails.alternateContactMobile || '');
+
+    const socialAccounts = Array.isArray(formData.requestDetails.socialAccount)
+      ? formData.requestDetails.socialAccount
+      : (formData.requestDetails.socialAccount ? [formData.requestDetails.socialAccount] : []);
+    data.append('socialAccount', socialAccounts.join(', '));
+
+    const servicesList = [];
+    requestTypes.forEach(type => {
+      if (type === 'Official AdZU Website') {
+        servicesList.push(`Website (${formData.requestDetails.webFormOfPost || 'Post'})`);
+      } else if (type === 'Official AdZU Social Media Accounts') {
+        const socialServs = Array.isArray(formData.requestDetails.socialService) ? formData.requestDetails.socialService : [];
+        servicesList.push(`Social Media (${socialServs.join(', ')})`);
+      } else if (type === 'Print Media') {
+        servicesList.push(`Print Media (${(formData.requestDetails.printSizes || []).join(', ')})`);
+      } else if (type === 'Photo Documentation') {
+        servicesList.push('Photo Doc');
+      } else if (type === 'Video Documentation') {
+        servicesList.push('Video Doc');
+      } else if (type === 'Facebook Live') {
+        servicesList.push('FB Live');
+      } else {
+        const genericServs = Array.isArray(formData.requestDetails.serviceType) ? formData.requestDetails.serviceType : [];
+        servicesList.push(`${type} (${genericServs.join(', ')})`);
+      }
+    });
+    data.append('serviceType', servicesList.join(' | '));
+
+    let compiledDetails = "";
+    requestTypes.forEach(type => {
+      if (type === 'Official AdZU Website') {
+        compiledDetails += `--- OFFICIAL ADZU WEBSITE ---\n`;
+        compiledDetails += `Date Submitted: ${formData.requestDetails.webDateSubmitted || 'N/A'}\n`;
+        compiledDetails += `Date required to be posted: ${formData.requestDetails.webDateRequired || 'N/A'}\n`;
+        compiledDetails += `Name of Event/Project: ${formData.requestDetails.webEventName || 'N/A'}\n`;
+        compiledDetails += `Where to post: ${(formData.requestDetails.webWhereToPost || []).join(', ')}${formData.requestDetails.webWhereToPostOther ? ` (Other: ${formData.requestDetails.webWhereToPostOther})` : ''}\n`;
+        compiledDetails += `Form of post: ${formData.requestDetails.webFormOfPost || 'N/A'}\n\n`;
+      } else if (type === 'Official AdZU Social Media Accounts') {
+        compiledDetails += `--- OFFICIAL ADZU SOCIAL MEDIA ACCOUNTS ---\n`;
+        compiledDetails += `Choose AdZU Social Media Account: ${(formData.requestDetails.socialAccount || []).join(', ')}\n`;
+        compiledDetails += `Service: ${(formData.requestDetails.socialService || []).join(', ')}${formData.requestDetails.socialServiceOther ? ` (Other: ${formData.requestDetails.socialServiceOther})` : ''}\n\n`;
+      } else if (type === 'Print Media') {
+        compiledDetails += `--- PRINT MEDIA ---\n`;
+        compiledDetails += `Date Requested: ${formData.requestDetails.printDateRequested || 'N/A'}\n`;
+        compiledDetails += `Date Needed: ${formData.requestDetails.printDateNeeded || 'N/A'}\n`;
+        compiledDetails += `Event Information: ${formData.requestDetails.printEventInfo || 'N/A'}\n`;
+        compiledDetails += `Sizes and Prices: ${(formData.requestDetails.printSizes || []).join(', ')}${formData.requestDetails.printSizesOther ? ` (Other: ${formData.requestDetails.printSizesOther})` : ''}\n`;
+        compiledDetails += `Number of Sheet/s: ${formData.requestDetails.printNumSheets || 'N/A'}\n\n`;
+      } else if (type === 'Photo Documentation' || type === 'Video Documentation') {
+        compiledDetails += `--- PHOTO/VIDEO DOCUMENTATION ---\n`;
+        compiledDetails += `Event Point Person Name & Mobile: ${formData.requestDetails.photoVideoPointPerson || 'N/A'}\n`;
+        compiledDetails += `Date of Event: ${formData.requestDetails.photoVideoDate || 'N/A'}\n`;
+        compiledDetails += `Time of Event: ${formData.requestDetails.photoVideoTime || 'N/A'}\n`;
+        compiledDetails += `Location of Event: ${formData.requestDetails.photoVideoLocation || 'N/A'}\n`;
+        compiledDetails += `Name of Event: ${formData.requestDetails.photoVideoEventName || 'N/A'}\n`;
+        compiledDetails += `Event Information/Press Release Template:\n${formData.requestDetails.photoVideoEventInfo || 'N/A'}\n\n`;
+      } else if (type === 'Facebook Live') {
+        compiledDetails += `--- FACEBOOK LIVE ---\n`;
+        compiledDetails += `Event Point Person Name & Mobile: ${formData.requestDetails.fbLivePointPerson || 'N/A'}\n`;
+        compiledDetails += `Event Title: ${formData.requestDetails.fbLiveEventTitle || 'N/A'}\n`;
+        compiledDetails += `Event Date & Time: ${formData.requestDetails.fbLiveEventDate || 'N/A'} ${formData.requestDetails.fbLiveEventTime || 'N/A'}\n`;
+        compiledDetails += `Event Duration: ${formData.requestDetails.fbLiveDuration || 'N/A'}\n`;
+        compiledDetails += `Event Point Person/Coordinator: ${formData.requestDetails.fbLiveCoordinator || 'N/A'}\n\n`;
+      }
+    });
+
+    const userEventDetails = formData.eventInfo.eventDetails || "";
+    const finalEventDetails = compiledDetails 
+      ? `${compiledDetails}--- ADDITIONAL CONTEXT ---\n${userEventDetails}`
+      : userEventDetails;
+
+    data.append('eventDetails', finalEventDetails);
     
-    if (formData.eventInfo.files) {
-        formData.eventInfo.files.forEach(file => data.append('files', file));
-    }
+    const allFiles = [
+      ...(formData.eventInfo.files || []),
+      ...(formData.requestDetails.printFiles || []),
+      ...(formData.requestDetails.photoVideoFiles || []),
+      ...(formData.requestDetails.fbLiveFlowFile || [])
+    ];
+    allFiles.forEach(file => data.append('files', file));
     
     try {
       const response = await fetch('/api/submit', {
