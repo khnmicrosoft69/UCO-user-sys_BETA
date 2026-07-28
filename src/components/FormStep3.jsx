@@ -13,7 +13,7 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
 
   const isLocalMediaSelected = requestTypes.includes('Local Media Services');
   const platformOptions = isLocalMediaSelected ? [
-    'Radio/Television/Teleserye',
+    'Radio/Television/Teleradyo',
     'Press Release (Newspaper, Magazines, etc.)',
     'Press Conference',
     'Local Media Event Coverage'
