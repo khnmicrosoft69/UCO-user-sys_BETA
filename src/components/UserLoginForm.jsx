@@ -16,7 +16,7 @@ export default function UserLoginForm() {
     const clientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) return;
 
-    // Always keep the window callback fresh so React state closures are current
+    // Always update the window callback so the latest React state closure is used
     window.handleGoogleResponse = async (response) => {
       setLoading(true);
       setError('');
@@ -43,30 +43,19 @@ export default function UserLoginForm() {
     const initGoogleButton = () => {
       if (!window.google) return;
 
-      if (window.__googleInitialized) {
-        // Script already initialized — just re-render the button
-        if (googleButtonRef.current) {
-          window.google.accounts.id.renderButton(googleButtonRef.current, {
-            theme: 'outline',
-            size: 'large',
-            shape: 'rectangular',
-            width: 330,
-            text: 'continue_with',
-          });
-        }
-        return;
-      }
-
-      // Prevent stale cached credentials from being auto-replayed
+      // Always re-initialize so GIS always holds the freshest callback reference.
+      // GIS is designed to be called once per page load — calling it multiple
+      // times only logs a warning but is safe and ensures the callback is current.
       window.google.accounts.id.disableAutoSelect();
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: window.handleGoogleResponse,
         auto_select: false,
       });
-      window.__googleInitialized = true;
 
       if (googleButtonRef.current) {
+        // Clear the container before re-rendering to avoid duplicate buttons
+        googleButtonRef.current.innerHTML = '';
         window.google.accounts.id.renderButton(googleButtonRef.current, {
           theme: 'outline',
           size: 'large',
@@ -77,7 +66,7 @@ export default function UserLoginForm() {
       }
     };
 
-    // Don't append the script twice (e.g. React StrictMode double-invoke)
+    // Don't append the GSI script more than once
     const existingScript = document.querySelector(
       'script[src="https://accounts.google.com/gsi/client"]'
     );

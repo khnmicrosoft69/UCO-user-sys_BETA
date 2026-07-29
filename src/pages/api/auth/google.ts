@@ -1,55 +1,146 @@
 import type { APIRoute } from 'astro';
 import sql from '../../../utils/db';
-import { OAuth2Client } from 'google-auth-library';
 
-// Use GOOGLE_CLIENT_ID (server-only) with PUBLIC_ as fallback
 const GOOGLE_CLIENT_ID =
   import.meta.env.GOOGLE_CLIENT_ID ||
   import.meta.env.PUBLIC_GOOGLE_CLIENT_ID;
 
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+// ---------------------------------------------------------------------------
+// Verify a Google ID token (JWT) using Google's public JWKS.
+// Uses the Web Crypto API so it works in any serverless / edge environment
+// without needing google-auth-library's outbound HTTPS dependencies.
+// ---------------------------------------------------------------------------
+async function verifyGoogleToken(idToken: string): Promise<{
+  email: string;
+  name: string;
+  sub: string;
+  picture?: string;
+} | null> {
+  try {
+    const parts = idToken.split('.');
+    if (parts.length !== 3) return null;
 
+    // --- 1. Decode header to get key id (kid) ---
+    const headerJson = JSON.parse(
+      atob(parts[0].replace(/-/g, '+').replace(/_/g, '/'))
+    );
+    const kid: string = headerJson.kid;
+
+    // --- 2. Fetch Google's public JWKS ---
+    const certsRes = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+    if (!certsRes.ok) {
+      console.error('Google JWKS fetch failed:', certsRes.status);
+      return null;
+    }
+    const certs = (await certsRes.json()) as { keys: JsonWebKey[] };
+
+    const jwk = certs.keys.find((k: any) => k.kid === kid);
+    if (!jwk) {
+      console.error('No matching JWK found for kid:', kid);
+      return null;
+    }
+
+    // --- 3. Import the public key ---
+    const publicKey = await crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    // --- 4. Verify the signature ---
+    const encoder = new TextEncoder();
+    const signingInput = encoder.encode(`${parts[0]}.${parts[1]}`);
+    const signatureBytes = Uint8Array.from(
+      atob(parts[2].replace(/-/g, '+').replace(/_/g, '/')),
+      (c) => c.charCodeAt(0)
+    );
+
+    const isValid = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5',
+      publicKey,
+      signatureBytes,
+      signingInput
+    );
+
+    if (!isValid) {
+      console.error('Google token signature verification failed');
+      return null;
+    }
+
+    // --- 5. Decode and validate the payload ---
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+    );
+
+    const now = Math.floor(Date.now() / 1000);
+
+    if (payload.aud !== GOOGLE_CLIENT_ID) {
+      console.error('Google token audience mismatch. Got:', payload.aud);
+      return null;
+    }
+    if (
+      payload.iss !== 'accounts.google.com' &&
+      payload.iss !== 'https://accounts.google.com'
+    ) {
+      console.error('Google token invalid issuer:', payload.iss);
+      return null;
+    }
+    if (payload.exp < now) {
+      console.error('Google token expired');
+      return null;
+    }
+
+    return {
+      email: payload.email,
+      name: payload.name ?? payload.email,
+      sub: payload.sub,
+      picture: payload.picture,
+    };
+  } catch (err) {
+    console.error('Google token verification error:', err);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/auth/google
+// ---------------------------------------------------------------------------
 export const POST: APIRoute = async (context) => {
   const { request, cookies } = context;
   try {
-    // Guard: fail fast if Client ID is not configured on the server
     if (!GOOGLE_CLIENT_ID) {
-      console.error('Google Login error: GOOGLE_CLIENT_ID (or PUBLIC_GOOGLE_CLIENT_ID) is not set in .env');
+      console.error('Google Login: PUBLIC_GOOGLE_CLIENT_ID is not set');
       return new Response(
         JSON.stringify({ message: 'Server misconfiguration: Google Client ID missing.' }),
         { status: 500 }
       );
     }
 
-    const { token } = await request.json();
+    const body = await request.json();
+    // Support both { token } (current) and { credential } (legacy) field names
+    const idToken: string | undefined = body.token ?? body.credential;
 
-    if (!token) {
+    if (!idToken) {
       return new Response(
         JSON.stringify({ message: 'No token provided' }),
         { status: 400 }
       );
     }
 
-    // Verify Google ID Token using google-auth-library
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
+    // Verify the token
+    const googleUser = await verifyGoogleToken(idToken);
+    if (!googleUser) {
       return new Response(
-        JSON.stringify({ message: 'Invalid Google token payload' }),
-        { status: 400 }
+        JSON.stringify({ message: 'Invalid or expired Google token. Please try again.' }),
+        { status: 401 }
       );
     }
 
-    const email = payload.email;
-    const name = payload.name ?? email;
-    const googleId = payload.sub;
-    const picture = payload.picture ?? null;
+    const { email, name, sub: googleId, picture = null } = googleUser;
 
-    // Check if a user with this email already exists
+    // Check if user already exists
     const existing = await sql`
       SELECT id, email, full_name as "fullName", office
       FROM user_accounts
@@ -59,7 +150,7 @@ export const POST: APIRoute = async (context) => {
     let user: { id: number; email: string; fullName: string; office: string };
 
     if (existing.length > 0) {
-      // User exists – update their google_id and picture if not already set
+      // Existing user — sync google_id and picture if not yet stored
       await sql`
         UPDATE user_accounts
         SET
@@ -69,7 +160,7 @@ export const POST: APIRoute = async (context) => {
       `;
       user = existing[0] as typeof user;
     } else {
-      // New user – insert with NULL password (Google-auth only account)
+      // New user — create account (Google-only, no password)
       const result = await sql`
         INSERT INTO user_accounts (email, full_name, office, google_id, picture, password)
         VALUES (${email}, ${name}, ${'(via Google)'}, ${googleId}, ${picture}, NULL)
@@ -78,7 +169,7 @@ export const POST: APIRoute = async (context) => {
       user = result[0] as typeof user;
     }
 
-    // Set session cookie (same format as email/password login)
+    // Set session cookie
     cookies.set('session', `user:${user.id}`, {
       path: '/',
       httpOnly: true,
@@ -94,7 +185,7 @@ export const POST: APIRoute = async (context) => {
   } catch (error) {
     console.error('Google auth error:', error);
     return new Response(
-      JSON.stringify({ message: 'Failed to verify Google Token' }),
+      JSON.stringify({ message: 'Internal server error during Google login.' }),
       { status: 500 }
     );
   }
