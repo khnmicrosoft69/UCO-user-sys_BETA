@@ -7,6 +7,8 @@ export default function SubmissionOverview() {
   const [files, setFiles] = useState([]);
   const [activeFile, setActiveFile] = useState(null);
   const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
   const viewerBase = 'http://localhost:3001';
 
   useEffect(() => {
@@ -71,6 +73,42 @@ export default function SubmissionOverview() {
     const validFiles = fileList.filter(Boolean);
     setFiles(validFiles);
     if (validFiles.length > 0) setActiveFile(validFiles[0]);
+  };
+
+  const handleEdit = () => {
+    setEditForm({
+      office_name: submission.office_name,
+      request_type: submission.request_type,
+      mName: submission.mName,
+      nNo: submission.nNo,
+      socMed: submission.socMed,
+      service: submission.service,
+      eventDetails: submission.eventDetails,
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch('/api/update-submission', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: submission.id,
+          user_id: user.id,
+          ...editForm
+        })
+      });
+      if (res.ok) {
+        setSubmission({ ...submission, ...editForm });
+        setIsEditing(false);
+      } else {
+        alert('Failed to update submission.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error updating submission.');
+    }
   };
 
   if (loading)
@@ -149,9 +187,17 @@ export default function SubmissionOverview() {
             <h2 className="text-[10px] font-black text-[#A3AED0] uppercase tracking-widest mb-4">
               Event Context
             </h2>
-            <p className="text-xs font-bold text-[#1B2559] leading-relaxed whitespace-pre-line font-medium italic">
-              {submission.eventDetails || "No additional details provided."}
-            </p>
+            {isEditing ? (
+              <textarea 
+                className="w-full h-32 border border-slate-200 rounded p-3 text-xs font-bold text-[#1B2559] outline-none focus:border-indigo-500"
+                value={editForm.eventDetails || ''}
+                onChange={(e) => setEditForm({...editForm, eventDetails: e.target.value})}
+              />
+            ) : (
+              <p className="text-xs font-bold text-[#1B2559] leading-relaxed whitespace-pre-line font-medium italic">
+                {submission.eventDetails || "No additional details provided."}
+              </p>
+            )}
           </div>
         </div>
 
@@ -173,9 +219,25 @@ export default function SubmissionOverview() {
           {/* Key Submission Parameters Metadata Grid */}
           <div className="bg-white p-8 rounded-[10px] shadow-[0_18px_40px_rgba(112,144,176,0.12)] border border-slate-100">
             <div className="flex items-center justify-between mb-6 border-b border-[#F4F7FE] pb-4">
-              <h2 className="text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">
-                Request Details
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-[10px] font-black text-[#A3AED0] uppercase tracking-widest">
+                  Request Details
+                </h2>
+                {!isEditing ? (
+                  <button onClick={handleEdit} className="text-[9px] font-black bg-slate-100 text-slate-600 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">
+                    Edit
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button onClick={handleSave} className="text-[9px] font-black bg-[#05CD99] text-white px-3 py-1 rounded-full hover:bg-emerald-600 transition-colors">
+                      Save
+                    </button>
+                    <button onClick={() => setIsEditing(false)} className="text-[9px] font-black bg-rose-100 text-rose-600 px-3 py-1 rounded-full hover:bg-rose-200 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
               <div
                 className={`w-3 h-3 rounded-full ${submission.status === "Pending" ? "bg-[#FFB800]" : "bg-[#05CD99]"}`}
               ></div>
@@ -183,19 +245,25 @@ export default function SubmissionOverview() {
 
             <div className="space-y-5">
               {[
-                { label: "Office", value: submission.office_name },
-                { label: "Requestor", value: submission.mName },
-                { label: "Contact", value: submission.nNo },
-                { label: "Social Media", value: submission.socMed },
-                { label: "Event Type", value: submission.request_type },
-                { label: "Service", value: submission.service },
+                { label: "Office", key: "office_name", value: submission.office_name },
+                { label: "Requestor", key: "mName", value: submission.mName },
+                { label: "Contact", key: "nNo", value: submission.nNo },
+                { label: "Social Media", key: "socMed", value: submission.socMed },
+                { label: "Event Type", key: "request_type", value: submission.request_type },
+                { label: "Service", key: "service", value: submission.service },
               ].map((item) => (
                 <div key={item.label} className="border-l-2 border-[#F4F7FE] pl-4 hover:border-indigo-500 transition-colors">
                   <p className="text-[9px] font-black text-[#A3AED0] tracking-widest uppercase">
                     {item.label}
                   </p>
                   <div className="text-[11px] font-bold text-[#1B2559] uppercase mt-0.5">
-                    {(() => {
+                    {isEditing ? (
+                      <input 
+                        className="border border-slate-200 rounded px-2 py-1.5 w-full mt-1 bg-white outline-none focus:border-indigo-500"
+                        value={editForm[item.key] || ''}
+                        onChange={(e) => setEditForm({...editForm, [item.key]: e.target.value})}
+                      />
+                    ) : (() => {
                       if (!item.value) return "Not Specified";
                       
                       const shouldFormat = ["Social Media", "Event Type", "Service"].includes(item.label);
