@@ -48,7 +48,7 @@ export default function FormContainer() {
       photoVideoPointPerson: '',
       photoVideoDate: '',
       photoVideoTime: '',
-      photoVideoLocation: '',
+      photoVideoLocation: [''],
       photoVideoEventName: '',
       photoVideoEventInfo: '',
       photoVideoFiles: [],
@@ -165,7 +165,10 @@ export default function FormContainer() {
     data.append('photoVideoPointPerson', formData.requestDetails.photoVideoPointPerson || '');
     data.append('photoVideoDate',        formData.requestDetails.photoVideoDate        || '');
     data.append('photoVideoTime',        formData.requestDetails.photoVideoTime        || '');
-    data.append('photoVideoLocation',    formData.requestDetails.photoVideoLocation    || '');
+    const pvEventLocation = Array.isArray(formData.requestDetails.photoVideoLocation)
+      ? formData.requestDetails.photoVideoLocation.filter(loc => loc.trim() !== '').join(', ')
+      : (formData.requestDetails.photoVideoLocation || '');
+    data.append('photoVideoLocation',    pvEventLocation);
     data.append('photoVideoEventName',   formData.requestDetails.photoVideoEventName   || '');
     data.append('photoVideoEventInfo',   formData.requestDetails.photoVideoEventInfo   || '');
 
@@ -242,7 +245,8 @@ export default function FormContainer() {
         compiledDetails += `Event Point Person Name & Mobile: ${formData.requestDetails.photoVideoPointPerson || 'N/A'}\n`;
         compiledDetails += `Date of Event: ${formData.requestDetails.photoVideoDate || 'N/A'}\n`;
         compiledDetails += `Time of Event: ${formData.requestDetails.photoVideoTime || 'N/A'}\n`;
-        compiledDetails += `Location of Event: ${formData.requestDetails.photoVideoLocation || 'N/A'}\n`;
+        const locs = Array.isArray(formData.requestDetails.photoVideoLocation) ? formData.requestDetails.photoVideoLocation.filter(l => l.trim()).join(', ') : formData.requestDetails.photoVideoLocation;
+        compiledDetails += `Location(s) of Event: ${locs || 'N/A'}\n`;
         compiledDetails += `Name of Event: ${formData.requestDetails.photoVideoEventName || 'N/A'}\n`;
         compiledDetails += `Event Information/Press Release Template:\n${formData.requestDetails.photoVideoEventInfo || 'N/A'}\n\n`;
 

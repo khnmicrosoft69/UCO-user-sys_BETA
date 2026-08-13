@@ -123,11 +123,15 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
     details.printNumSheets
   );
 
+  const isPhotoVideoLocationValid = Array.isArray(details.photoVideoLocation) 
+    ? details.photoVideoLocation.some(loc => typeof loc === 'string' && loc.trim() !== '') 
+    : (details.photoVideoLocation && typeof details.photoVideoLocation === 'string' && details.photoVideoLocation.trim() !== '');
+
   const isPhotoVideoComplete = !(requestTypes.includes('Photo Documentation') || requestTypes.includes('Video Documentation')) || (
     details.photoVideoPointPerson &&
     details.photoVideoDate &&
     details.photoVideoTime &&
-    details.photoVideoLocation &&
+    isPhotoVideoLocationValid &&
     details.photoVideoEventName &&
     details.photoVideoEventInfo
   );
@@ -556,18 +560,7 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Location of Event*</label>
-                <input 
-                  type="text" 
-                  name="photoVideoLocation"
-                  value={details.photoVideoLocation || ''}
-                  onChange={handleChange}
-                  placeholder="Location of Event"
-                  className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
-                />
-              </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Name of Event*</label>
                 <input 
                   type="text" 
@@ -577,6 +570,48 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
                   placeholder="Name of Event"
                   className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Location(s) of Event (Venue)*</label>
+                {(Array.isArray(details.photoVideoLocation) ? details.photoVideoLocation : [details.photoVideoLocation || '']).map((loc, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2">
+                    <input 
+                      type="text" 
+                      value={loc}
+                      onChange={(e) => {
+                        const newLocs = [...(Array.isArray(details.photoVideoLocation) ? details.photoVideoLocation : [details.photoVideoLocation || ''])];
+                        newLocs[idx] = e.target.value;
+                        handleChange({ target: { name: 'photoVideoLocation', value: newLocs } });
+                      }}
+                      placeholder={`Venue ${idx + 1}`}
+                      className="flex-1 p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                    />
+                    {idx > 0 && (
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          const newLocs = [...(Array.isArray(details.photoVideoLocation) ? details.photoVideoLocation : [details.photoVideoLocation || ''])];
+                          newLocs.splice(idx, 1);
+                          handleChange({ target: { name: 'photoVideoLocation', value: newLocs } });
+                        }}
+                        className="px-4 py-2 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-100 transition-colors font-black text-xs uppercase tracking-widest"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const newLocs = [...(Array.isArray(details.photoVideoLocation) ? details.photoVideoLocation : [details.photoVideoLocation || '']), ''];
+                    handleChange({ target: { name: 'photoVideoLocation', value: newLocs } });
+                  }}
+                  className="mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest flex items-center gap-1 transition-colors"
+                >
+                  + Add Another Venue
+                </button>
               </div>
             </div>
 

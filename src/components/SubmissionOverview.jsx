@@ -317,6 +317,10 @@ export default function SubmissionOverview() {
                         displayLines = valStr.split(',').map(v => v.trim()).filter(Boolean);
                       }
 
+                      if (displayLines.length === 1) {
+                        return <span className="block">{displayLines[0]}</span>;
+                      }
+
                       return displayLines.map((line, idx) => (
                         <span key={idx} className="block">{idx + 1}. {line}</span>
                       ));
