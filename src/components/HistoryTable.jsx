@@ -55,9 +55,10 @@ export default function HistoryTable() {
                     if (status === 'In-process') color = 'bg-blue-100 text-blue-700';
                     else if (status === 'Completed') color = 'bg-green-100 text-green-700';
                     else if (status === 'Rejected') color = 'bg-rose-100 text-rose-700';
+                    const displayStatus = status === 'Rejected' ? 'Not Accepted' : status;
                     return (
                       <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${color}`}>
-                        {status}
+                        {displayStatus}
                       </span>
                     );
                   })()}

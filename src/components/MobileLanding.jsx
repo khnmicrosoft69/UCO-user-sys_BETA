@@ -55,7 +55,7 @@ export default function MobileLanding({ onCreateRequest }) {
     { label: "Pending", count: metrics.pending, color: "bg-amber-500" },
     { label: "In-Process", count: metrics.inProcess, color: "bg-blue-500" },
     { label: "Completed", count: metrics.completed, color: "bg-green-500" },
-    { label: "Rejected", count: metrics.rejected, color: "bg-rose-500" },
+    { label: "Not Accepted", count: metrics.rejected, color: "bg-rose-500" },
   ];
 
   if (loading) {
@@ -150,7 +150,7 @@ export default function MobileLanding({ onCreateRequest }) {
                       <span
                         className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${statusColor}`}
                       >
-                        {status}
+                        {status === 'Rejected' ? 'Not Accepted' : status}
                       </span>
                       <span className="text-slate-300 group-hover:text-indigo-400 transition-colors text-lg">→</span>
                     </div>

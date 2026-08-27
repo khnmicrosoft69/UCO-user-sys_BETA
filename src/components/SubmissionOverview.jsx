@@ -149,7 +149,7 @@ export default function SubmissionOverview() {
             : submission.status === "Rejected" ? "bg-[#FFE6E6] text-[#EE5D50]"
             : "bg-[#FFF9E6] text-[#FFB800]"
           }`}>
-            {submission.status || "Pending"}
+            {submission.status === 'Rejected' ? 'Not Accepted' : (submission.status || "Pending")}
           </span>
         </div>
       </div>
@@ -211,7 +211,7 @@ export default function SubmissionOverview() {
             <div className="p-4 bg-[#F4F7FE] rounded-2xl text-center">
               <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Current State</p>
               <p className="text-sm font-black text-[#1B2559] uppercase tracking-widest">
-                {submission.status || "Pending"}
+                {submission.status === 'Rejected' ? 'Not Accepted' : (submission.status || "Pending")}
               </p>
             </div>
           </div>
