@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 const serviceOptions = [
   'Layout and Posting of graphics (Social cards and infographics)',
@@ -7,6 +7,7 @@ const serviceOptions = [
 ];
 
 export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
+  const [showErrors, setShowErrors] = useState(false);
   const requestTypes = Array.isArray(formData.requestType) 
     ? formData.requestType 
     : (formData.requestType ? [formData.requestType] : []);
@@ -157,6 +158,25 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
 
   const isComplete = isCommonComplete && isWebComplete && isSocialComplete && isPrintComplete && isPhotoVideoComplete && isFbLiveComplete && isFallbackComplete;
 
+  const handleContinue = () => {
+    if (isComplete) {
+      onNext();
+    } else {
+      setShowErrors(true);
+      alert("Please fill in all required fields.");
+      setTimeout(() => {
+        const errorElement = document.querySelector('.has-error');
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  };
+
+  const getLabelClass = (isInvalid) => {
+    return `block text-xs font-black mb-2 uppercase tracking-[0.15em] ${showErrors && isInvalid ? 'text-red-500 has-error' : 'text-slate-700'}`;
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center sm:text-left">
@@ -170,38 +190,38 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
           <h3 className="text-xs font-black text-[#0A1C5C] uppercase tracking-[0.2em] border-b border-slate-100 pb-3">Submission Details</h3>
           
           <div>
-            <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Requesting Office / Unit*</label>
+            <label className={getLabelClass(!details.office_name)}>Requesting Office / Unit*</label>
             <input 
               type="text" 
               name="office_name"
               value={details.office_name || ''}
               onChange={handleChange}
               placeholder="e.g. Office of Student Affairs"
-              className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+              className={`w-full p-4 bg-white border-2 rounded-2xl outline-none transition-all text-sm font-medium ${showErrors && !details.office_name ? 'border-red-500 focus:border-red-500' : 'border-slate-100 text-slate-900 focus:border-indigo-500'}`}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Requested by (Full Name)*</label>
+              <label className={getLabelClass(!details.requestedByName)}>Requested by (Full Name)*</label>
               <input 
                 type="text" 
                 name="requestedByName"
                 value={details.requestedByName || ''}
                 onChange={handleChange}
                 placeholder="Full Name"
-                className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                className={`w-full p-4 bg-white border-2 rounded-2xl outline-none transition-all text-sm font-medium ${showErrors && !details.requestedByName ? 'border-red-500 focus:border-red-500' : 'border-slate-100 text-slate-900 focus:border-indigo-500'}`}
               />
             </div>
             <div>
-              <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Mobile Number*</label>
+              <label className={getLabelClass(!details.requestedByMobile)}>Mobile Number*</label>
               <input 
                 type="text" 
                 name="requestedByMobile"
                 value={details.requestedByMobile || ''}
                 onChange={handleChange}
                 placeholder="09XX-XXX-XXXX"
-                className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                className={`w-full p-4 bg-white border-2 rounded-2xl outline-none transition-all text-sm font-medium ${showErrors && !details.requestedByMobile ? 'border-red-500 focus:border-red-500' : 'border-slate-100 text-slate-900 focus:border-indigo-500'}`}
               />
             </div>
           </div>
@@ -243,41 +263,41 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Date Submitted*</label>
+                <label className={getLabelClass(!details.webDateSubmitted)}>Date Submitted*</label>
                 <input 
                   type="date" 
                   name="webDateSubmitted"
                   value={details.webDateSubmitted || ''}
                   onChange={handleChange}
-                  className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                  className={`w-full p-4 bg-white border-2 rounded-2xl outline-none transition-all text-sm font-medium ${showErrors && !details.webDateSubmitted ? 'border-red-500 focus:border-red-500' : 'border-slate-100 text-slate-900 focus:border-indigo-500'}`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Date required to be posted*</label>
+                <label className={getLabelClass(!details.webDateRequired)}>Date required to be posted*</label>
                 <input 
                   type="date" 
                   name="webDateRequired"
                   value={details.webDateRequired || ''}
                   onChange={handleChange}
-                  className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                  className={`w-full p-4 bg-white border-2 rounded-2xl outline-none transition-all text-sm font-medium ${showErrors && !details.webDateRequired ? 'border-red-500 focus:border-red-500' : 'border-slate-100 text-slate-900 focus:border-indigo-500'}`}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-[0.15em]">Name of Event or Project*</label>
+              <label className={getLabelClass(!details.webEventName)}>Name of Event or Project*</label>
               <input 
                 type="text" 
                 name="webEventName"
                 value={details.webEventName || ''}
                 onChange={handleChange}
                 placeholder="Name of Event or Project"
-                className="w-full p-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                className={`w-full p-4 bg-white border-2 rounded-2xl outline-none transition-all text-sm font-medium ${showErrors && !details.webEventName ? 'border-red-500 focus:border-red-500' : 'border-slate-100 text-slate-900 focus:border-indigo-500'}`}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-700 mb-3 uppercase tracking-[0.15em]">Where to post*</label>
+              <label className={getLabelClass(!details.webWhereToPost || details.webWhereToPost.length === 0 || (details.webWhereToPost.includes('Other') && !details.webWhereToPostOther))}>Where to post*</label>
               <div className="flex flex-wrap gap-2">
                 {['Featured Stories (Home Page)', "Office's Web Page (Section inside Website)", 'Web banner/slider', 'Other'].map(option => (
                   <button
@@ -303,7 +323,7 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
             </div>
 
             <div>
-              <label className="block text-xs font-black text-slate-700 mb-3 uppercase tracking-[0.15em]">Form of post*</label>
+              <label className={getLabelClass(!details.webFormOfPost)}>Form of post*</label>
               <div className="grid grid-cols-1 gap-2">
                 {['News Article', 'Website Banner', 'Website Banner and News article'].map(option => (
                   <button
@@ -852,9 +872,8 @@ export default function FormStep3({ formData, setFormData, onNext, onPrev }) {
         </button>
         <button 
           type="button"
-          onClick={onNext} 
-          disabled={!isComplete}
-          className={`flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${isComplete ? 'bg-[#0A1C5C] text-white hover:bg-[#122A85] hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
+          onClick={handleContinue} 
+          className="flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl bg-[#0A1C5C] text-white hover:bg-[#122A85] hover:-translate-y-1 active:scale-95"
         >
           Continue
         </button>

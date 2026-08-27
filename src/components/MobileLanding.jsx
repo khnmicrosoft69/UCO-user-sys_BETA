@@ -29,7 +29,7 @@ export default function MobileLanding({ onCreateRequest }) {
     { label: "Pending", count: metrics.pending, color: "bg-amber-500" },
     { label: "In-Process", count: metrics.inProcess, color: "bg-blue-500" },
     { label: "Completed", count: metrics.completed, color: "bg-green-500" },
-    { label: "Rejected", count: metrics.rejected, color: "bg-rose-500" },
+    { label: "Not Accepted", count: metrics.rejected, color: "bg-rose-500" },
   ];
 
   if (loading) {

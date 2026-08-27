@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const requestTypes = [
   { label: 'Official AdZU Website', desc: 'Story in the AdZU website', icon: '🌐' },
@@ -14,6 +14,8 @@ const requestTypes = [
 ];
 
 export default function FormStep2({ formData, setFormData, onNext, onPrev }) {
+  const [showErrors, setShowErrors] = useState(false);
+
   const handleChange = (val) => {
     const currentTypes = Array.isArray(formData.requestType) ? formData.requestType : (formData.requestType ? [formData.requestType] : []);
     let newTypes;
@@ -45,11 +47,28 @@ export default function FormStep2({ formData, setFormData, onNext, onPrev }) {
     return currentTypes.includes(label);
   };
 
+  const isComplete = formData.requestType && formData.requestType.length > 0;
+
+  const handleContinue = () => {
+    if (isComplete) {
+      onNext();
+    } else {
+      setShowErrors(true);
+      alert("Please fill in all required fields.");
+      setTimeout(() => {
+        const errorElement = document.querySelector('.has-error');
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center sm:text-left">
         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Media Service</h2>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">What can we help you with today?*</p>
+        <p className={`text-xs font-bold uppercase tracking-widest mt-1 ${showErrors && !isComplete ? 'text-red-500 has-error' : 'text-slate-400'}`}>What can we help you with today?*</p>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
@@ -83,9 +102,8 @@ export default function FormStep2({ formData, setFormData, onNext, onPrev }) {
           Back
         </button>
         <button 
-          onClick={onNext} 
-          disabled={!formData.requestType || formData.requestType.length === 0}
-          className={`flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${(formData.requestType && formData.requestType.length > 0) ? 'bg-[#0A1C5C] text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
+          onClick={handleContinue} 
+          className="flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl bg-[#0A1C5C] text-white hover:bg-indigo-700 hover:-translate-y-1 active:scale-95"
         >
           Continue
         </button>
