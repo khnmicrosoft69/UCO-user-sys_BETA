@@ -10,26 +10,52 @@ export default function MobileLanding({ onCreateRequest }) {
     if (!savedUser) return;
     const user = JSON.parse(savedUser);
 
-    Promise.all([
-      fetch(`/api/user-metrics?userId=${user.id}`).then(res => res.json()),
-      fetch(`/api/my-submissions?userId=${user.id}`).then(res => res.json())
-    ]).then(([metricsData, submissionsData]) => {
-      setMetrics(metricsData);
-      if (Array.isArray(submissionsData)) {
-        setRecentLogs(submissionsData.slice(0, 4));
-      }
-      setLoading(false);
-    }).catch(err => {
-      console.error(err);
-      setLoading(false);
-    });
+    fetch(`/api/my-submissions?userId=${user.id}`)
+      .then(res => res.json())
+      .then(submissionsData => {
+        if (Array.isArray(submissionsData)) {
+          setRecentLogs(submissionsData.slice(0, 4));
+
+          // Compute counts directly from submissions data (reliable fallback)
+          const counts = { pending: 0, inProcess: 0, completed: 0, rejected: 0 };
+          submissionsData.forEach(s => {
+            const status = (s.status || 'Pending').trim();
+            if (status === 'Pending') counts.pending++;
+            else if (status === 'In-process') counts.inProcess++;
+            else if (status === 'Completed') counts.completed++;
+            else if (status === 'Rejected') counts.rejected++;
+          });
+
+          // Try the dedicated metrics endpoint and use it only if it returns valid numbers
+          fetch(`/api/user-metrics?userId=${user.id}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(metricsData => {
+              if (
+                metricsData &&
+                typeof metricsData.pending === 'number' &&
+                typeof metricsData.inProcess === 'number'
+              ) {
+                setMetrics(metricsData);
+              } else {
+                // Fall back to counts computed from submissions
+                setMetrics(counts);
+              }
+            })
+            .catch(() => setMetrics(counts));
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
   const statusFilters = [
     { label: "Pending", count: metrics.pending, color: "bg-amber-500" },
     { label: "In-Process", count: metrics.inProcess, color: "bg-blue-500" },
     { label: "Completed", count: metrics.completed, color: "bg-green-500" },
-    { label: "Not Accepted", count: metrics.rejected, color: "bg-rose-500" },
+    { label: "Rejected", count: metrics.rejected, color: "bg-rose-500" },
   ];
 
   if (loading) {
